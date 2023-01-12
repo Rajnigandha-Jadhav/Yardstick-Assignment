@@ -9,7 +9,6 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import tabStyles from 'react-tabs/style/react-tabs.css';
 import VM from 'scratch-vm';
 import Renderer from 'scratch-render';
-
 import Blocks from '../../containers/blocks.jsx';
 import CostumeTab from '../../containers/costume-tab.jsx';
 import TargetPane from '../../containers/target-pane.jsx';
@@ -21,7 +20,6 @@ import MenuBar from '../menu-bar/menu-bar.jsx';
 import CostumeLibrary from '../../containers/costume-library.jsx';
 import BackdropLibrary from '../../containers/backdrop-library.jsx';
 import Watermark from '../../containers/watermark.jsx';
-
 import Backpack from '../../containers/backpack.jsx';
 import WebGlModal from '../../containers/webgl-modal.jsx';
 import TipsLibrary from '../../containers/tips-library.jsx';
@@ -32,10 +30,10 @@ import ConnectionModal from '../../containers/connection-modal.jsx';
 import TelemetryModal from '../telemetry-modal/telemetry-modal.jsx';
 import TextModelModal from '../../containers/model-modal.jsx';
 import ClassifierModelModal from '../../containers/classifier-model-modal.jsx'
-
+import TableName from '../../containers/table-modal.jsx'
+import TableViewerModal from '../../containers/table-viewer-modal.jsx'
 import layout, {STAGE_SIZE_MODES} from '../../lib/layout-constants';
 import {resolveStageSize} from '../../lib/screen-utils';
-
 import styles from './gui.css';
 import addExtensionIcon from './icon--extensions.svg';
 import codeIcon from './icon--code.svg';
@@ -50,11 +48,9 @@ const messages = defineMessages({
         defaultMessage: 'Add Extension'
     }
 });
-
 // Cache this value to only retrieve it once the first time.
 // Assume that it doesn't change for a session.
 let isRendererSupported = null;
-
 const GUIComponent = props => {
     const {
         accountNavOpen,
@@ -120,13 +116,14 @@ const GUIComponent = props => {
         textModelModalVisible,
         programmaticModalDetails,
         classifierModelModalVisible,
+        tableModalVisible,
+        tableViewerModalVisible,
         vm,
         ...componentProps
     } = omit(props, 'dispatch');
     if (children) {
         return <Box {...componentProps}>{children}</Box>;
     }
-
     const tabClassNames = {
         tabs: styles.tabs,
         tab: classNames(tabStyles.reactTabsTab, styles.tab),
@@ -135,14 +132,11 @@ const GUIComponent = props => {
         tabPanelSelected: classNames(tabStyles.reactTabsTabPanelSelected, styles.isSelected),
         tabSelected: classNames(tabStyles.reactTabsTabSelected, styles.isSelected)
     };
-
     if (isRendererSupported === null) {
         isRendererSupported = Renderer.isSupported();
     }
-
     return (<MediaQuery minWidth={layout.fullSizeMinWidth}>{isFullSize => {
         const stageSize = resolveStageSize(stageSizeMode, isFullSize);
-
         return isPlayerOnly ? (
             <StageWrapper
                 isFullScreen={isFullScreen}
@@ -192,6 +186,16 @@ const GUIComponent = props => {
                 ) : null}
                 {classifierModelModalVisible ? (
                     <ClassifierModelModal
+                        vm={vm}
+                    />
+                ) : null}
+                {tableModalVisible ? (
+                    <TableName
+                        vm={vm}
+                    />
+                ) : null}
+                {tableViewerModalVisible ? (
+                    <TableViewerModal
                         vm={vm}
                     />
                 ) : null}
@@ -348,7 +352,6 @@ const GUIComponent = props => {
                                 <Backpack host={backpackHost} />
                             ) : null}
                         </Box>
-
                         <Box className={classNames(styles.stageAndTargetWrapper, styles[stageSize])}>
                             <StageWrapper
                                 isRendererSupported={isRendererSupported}
@@ -370,7 +373,6 @@ const GUIComponent = props => {
         );
     }}</MediaQuery>);
 };
-
 GUIComponent.propTypes = {
     accountNavOpen: PropTypes.bool,
     activeTabIndex: PropTypes.number,
@@ -433,6 +435,8 @@ GUIComponent.propTypes = {
     textModelModalVisible: PropTypes.bool,
     programmaticModalVisible: PropTypes.bool,
     classifierModelModalVisible: PropTypes.bool,
+    tableModalVisible: PropTypes.bool,
+    tableViewerModalVisible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 GUIComponent.defaultProps = {
@@ -455,12 +459,10 @@ GUIComponent.defaultProps = {
     showComingSoon: false,
     stageSizeMode: STAGE_SIZE_MODES.large
 };
-
 const mapStateToProps = state => ({
     // This is the button's mode, as opposed to the actual current state
     stageSizeMode: state.scratchGui.stageSize.stageSize
 });
-
 export default injectIntl(connect(
     mapStateToProps
 )(GUIComponent));
